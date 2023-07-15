@@ -26,20 +26,25 @@
 (defn- trim [str] (clojure.string/replace str #"[^\d\w]+|[_]+" ""))
 (defn -main
   [& args]
-  (with-open [xml (clojure.java.io/writer "target/colors.xml" :append false)]
-    )
+  (with-open [writer (clojure.java.io/writer "target/colors.xml" :append false)]
+    (spit writer "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<resources>\n"))
   (with-open [writer (clojure.java.io/writer "target/colors.xml" :append true)
               safari (SafariDriver.)]
     (.get safari (str "http://www.ralcolor.com"))
     (doseq [index (range 14 440 2)
             tab [3]]
+      (.write writer "    <color name=\"")
       (.write writer (->> (path index 1)
-           (get-text safari)
-           trim
-           empty?
-           (#(if % 1 0))
-           (+ tab)
-           (path index)
-           (get-text safari)
-           trim)))
-    ))
+                          (get-text safari)
+                          trim
+                          empty?
+                          (#(if % 1 0))
+                          (+ tab)
+                          (path index)
+                          (get-text safari)
+                          trim))
+      (.write writer "\">")
+      (.write writer "#FFFFFFFF")
+      (.write writer "</color>\n")
+      )
+    (.write writer "</resources>\n")))
