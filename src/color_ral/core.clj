@@ -22,8 +22,17 @@
                                              CompositeAction))
   (:gen-class))
 (defn- path [index tab] (str "/html/body/div/div/table/tbody/tr[" index "]/td[" tab "]"))
-(defn- get-text [driver xpath] (.getText (.findElement driver (By/xpath xpath))))
+(defn- get-text [^WebDriver driver xpath] (.getText (.findElement driver (By/xpath xpath))))
 (defn- trim [str] (clojure.string/replace str #"[^\d\w]+|[_]+" ""))
+(defn- get-color [^WebDriver driver xpath]
+  (.getCssValue (.findElement driver (By/xpath xpath)) "background-color"))
+(defn- serilize [rgb]
+  (->> (clojure.string/split rgb #"\D+")
+       (filter (comp not empty?))
+       (map read-string)
+       (map #(Integer/toString % 16))
+       (apply str "#FF")
+       clojure.string/upper-case))
 (defn -main
   [& args]
   (with-open [writer (clojure.java.io/writer "target/colors.xml" :append false)]
@@ -44,7 +53,8 @@
                           (get-text safari)
                           trim))
       (.write writer "\">")
-      (.write writer "#FFFFFFFF")
-      (.write writer "</color>\n")
-      )
+      (.write writer (->> (path index tab)
+                          (get-color safari)
+                          serilize))
+      (.write writer "</color>\n"))
     (.write writer "</resources>\n")))
