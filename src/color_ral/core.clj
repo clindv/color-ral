@@ -23,7 +23,10 @@
   (:gen-class))
 (defn- path [index tab] (str "/html/body/div/div/table/tbody/tr[" index "]/td[" tab "]"))
 (defn- get-text [^WebDriver driver xpath] (.getText (.findElement driver (By/xpath xpath))))
-(defn- trim [str] (clojure.string/replace str #"[^\d\w]+|[_]+" ""))
+(defn- trim [str]
+  (->> (clojure.string/replace str #"[^\d\w]+|[_]+" " ")
+       clojure.string/trim
+       clojure.string/lower-case))
 (defn- get-color [^WebDriver driver xpath]
   (.getCssValue (.findElement driver (By/xpath xpath)) "background-color"))
 (defn- serilize [rgb]
@@ -40,6 +43,9 @@
   (with-open [writer (clojure.java.io/writer "target/colors.xml" :append true)
               safari (SafariDriver.)]
     (.get safari (str "http://www.ralcolor.com"))
+    (-> safari
+        (WebDriverWait. (java.time.Duration/ofSeconds 5))
+        (.until (ExpectedConditions/presenceOfElementLocated (By/xpath (path 412 1)))))
     (doseq [index (range 14 440 2)
             tab [3]]
       (.write writer "    <color name=\"")
